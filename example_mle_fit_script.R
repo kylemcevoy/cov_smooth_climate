@@ -1,5 +1,5 @@
 # Script to fit the MLEs for the Matern-3/2 model on the July SST detrended
-# anomalies. 
+# anomalies. Run using Rscript from the terminal.
 
 source("code/functions/blockwise_MLE.R")
 source("code/functions/process_data.R")
@@ -8,18 +8,26 @@ source("code/functions/parallel.R")
 
 library(data.table)
 
-# for parallelizing code comment out all plan statements, or replace with
-# plan(sequential) if running on a single CPU.
+# plan(sequential) runs on a single CPU, plan(multicore) or plan(multisession)
+# run on multiple cpus. multicore generally preferred for memory management;
+# however, it does not work with Rstudio or on Windows architectures. In those
+# cases, use plan(multisession) instead.
 library(future.apply)
-plan(multicore, workers = 16)
+plan(sequential)
+# on Unix type OS can use plan(multicore). Do not run from Rstudio.
+#plan(multicore, workers = 16)
+# on Windows can use multisession, but note that the memory load will be much
+# more intensive since multiple background sessions with ~4.5 GB of data will
+# be spawned. 
+#plan(multisession, workers = 4)
 
-data_path <- "/home/data/projects/clim_smooth/"
-save_path <- "/home/data/projects/clim_smooth/"
+data_path <- "data/"
+save_path <- "data/"
 
 month <- 'jul'
 
-sst_filepath <- paste0(data_path, "sst_detrend_anom_", month, ".csv")
-save_filepath <- paste0(save_path, "sst_", month, "_mle_fit.csv")
+sst_filepath <- paste0(data_path, "sst_detrend_anom_jul.csv")
+save_filepath <- paste0(save_path, "sst_jul_mle_fit.csv")
 
 # Only gridboxes with fewer than 25% of values being identical are kept.
 # This arises at locations that are frozen over for a portion of the
