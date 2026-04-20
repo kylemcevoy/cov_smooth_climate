@@ -4,8 +4,9 @@ format: html
 ---
 
 This code demonstrates how to apply the method, using the July sea surface
-temperatures (SST) covariates and Central US temperatures example from the paper. 
-In this example, we regress a time series of mean 2m air temperatures over the Central US against the SST covariates, looking for potential associations.
+temperatures (SST) covariates and Central US temperatures application from the
+paper. In this application, we regress a time series of mean 2m air temperatures over the Central US against the SST covariates, looking for potential 
+associations.
 
 In order to apply the smoothing method, we need to fit the MLEs of the spatial
 model parameters to the SST data. This can be done by running `example_mle_fit_script.R`.
@@ -26,9 +27,9 @@ library(ggplot2)
 ```
 
 `plan(multicore)` can be used to speed up the process if there are available
-cores and memory. See scripts/application/sst_mle_fit_parallel.R for details
-note that plan(multicore) should not be run from within Rstudio, use Rscript
-with a .R script file instead.
+cores and memory. See `scripts/application/sst_mle_fit_parallel.R` for an
+example. Note that plan(multicore) should not be run from within Rstudio, 
+use Rscript with a .R script file instead.
 
 ```{r}
 source("code/functions/process_data.R")
@@ -82,7 +83,8 @@ smoothing_weights <- find_smooth_weights(loc_list,
                                          zonal_sdist = sst_zonal_sdist,
                                          merid_sdist = sst_merid_sdist,
                                          cov_func = matern_1.5_cov,
-                                         mle_params = mle_mat)
+                                         mle_params = mle_mat,
+                                         progress = FALSE)
 
 sst_jul_mat_smooth <- sst_mat_std %*% smoothing_weights
 
@@ -118,6 +120,9 @@ reject_df <- rbind(reject_df, no_BH)
 
 fwrite(reject_df, file = paste0(save_path, "t2m_sst_rejections_jul.csv"))
 ```
+
+Finally, we plot the results to compare the rejections under the three
+different methods.
 
 ```{r}
 land_map <- sf::st_as_sf(map(wrap = c(0, 360), plot = FALSE, fill = TRUE))
@@ -203,3 +208,8 @@ smooth_plot <- ggplot(data = land_map) +
 patchwork_stacked_plot <- (no_fdr_plot / base_plot / smooth_plot)
 patchwork_stacked_plot
 ```
+
+The method with no multiple testing correction shows many spurious rejections,
+while Benjamini-Hochberg without smoothing shows no rejections. The combination
+of our smoothing method with Benjamini-Hochberg produces a small core of
+rejections in the Pacific Ocean off the west coast of the US.
